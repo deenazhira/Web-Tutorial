@@ -44,4 +44,7 @@ Include functions for profile update :
 -After submit code
 ![image](https://github.com/user-attachments/assets/29ce65bd-24c6-43e4-8ea2-9d9bb584bd63)
 
+-Bcrypt password
+![image](https://github.com/user-attachments/assets/6e148994-756b-4458-a74f-631d802e0806)
+
 
