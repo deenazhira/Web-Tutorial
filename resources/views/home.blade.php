@@ -14,7 +14,11 @@
                         </div>
                     @endif
 
-                    {{ __('You are logged in!') }}
+                    <p class="mb-3">{{ __('Welcome to My Tutorial. You are logged in!') }}</p>
+
+                    <a href="{{ route('todo.index') }}" class="btn btn-outline-primary">
+                        Click here to view your Todos
+                    </a>
                 </div>
             </div>
         </div>
