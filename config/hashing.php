@@ -5,7 +5,7 @@ return [
     'driver' => env('HASH_DRIVER', 'bcrypt'),
 
     'bcrypt' => [
-        'rounds' => env('BCRYPT_ROUNDS', 10),
+        'rounds' => 10,
         'verify' => true,
     ],
 
