@@ -47,4 +47,6 @@ Include functions for profile update :
 -Bcrypt password
 ![image](https://github.com/user-attachments/assets/6e148994-756b-4458-a74f-631d802e0806)
 
+- Add salt to register
+![image](https://github.com/user-attachments/assets/c7338384-d39a-41b9-b94c-2af6a87e49c6)
 
