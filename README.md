@@ -79,3 +79,81 @@ RateLimiter::for('login', function (Request $request) {
 - Add salt to register
 ![image](https://github.com/user-attachments/assets/c7338384-d39a-41b9-b94c-2af6a87e49c6)
 
+# Class Assignment - Laravel To-Do App with Authentication & Role-Based Access Control (RBAC)
+
+This project enhances the Laravel To-Do application by adding a secure **authentication system** and a **Role-Based Access Control (RBAC)** mechanism to differentiate between user and administrator privileges.
+
+## ✅ Features Implemented
+
+### 1. Authentication Layer
+- Users must log in before accessing the server
+- After successful login:
+  - Regular users are redirected to `/todo`.
+  - Admins are redirected to `/admin`.
+
+### 2. Role-Based Access Control (RBAC)
+RBAC is implemented using:
+- `user_roles` table – assigns roles to users.
+- `role_permissions` table – defines what each role can do (CRUD).
+
+### 3. Database Migrations
+#### 1) `create_user_roles_table.php` - This table links each user_id to a role_name to ensure each user has one specific role
+Defines the `user_roles` table:
+Schema::create('user_roles', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id')->unique();
+    $table->string('role_name'); // 'admin' or 'user'
+    $table->string('description')->nullable();
+    $table->timestamps();
+});
+
+#### 2) `create_role_permissions_table.php` - store CRUD permissions for each role
+Defines the `role_permissions` table:
+Schema::create('role_permissions', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('role_id');
+    $table->string('description'); // 'create', 'read', 'update', 'delete'
+    $table->timestamps();
+});
+
+### 4. Models
+#### 1) UserRole.php - define a relationship with the users table
+class UserRole extends Model {
+    protected $fillable = ['user_id', 'role_name', 'description'];
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+}
+
+#### 2) RolePermission.php - links each permission to a specific role
+class RolePermission extends Model {
+    protected $fillable = ['role_id', 'description'];
+    public function role() {
+        return $this->belongsTo(UserRole::class, 'role_id');
+    }
+}
+
+### 5. Middleware
+#### RoleMiddleware.php - protects routes so only users with the correct role can access them. 
+public function handle($request, Closure $next, $role){
+    $userRole = UserRole::where('user_id', auth()->id())->value('role_name');
+    if ($userRole !== $role) {
+        abort(403, 'Unauthorized');
+    }
+    return $next($request);
+}
+
+### 6. Routes
+#### web.php - use middleware to redirect users and admins to their appropriate sections
+// Routes for Regular Users
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::resource('/todo', TodoController::class);
+});
+
+// Routes for Admins
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin', [AdminController::class, 'dashboard']);
+    Route::get('/admin/users', [AdminController::class, 'userList']);
+    Route::post('/admin/users/{id}/toggle', [AdminController::class, 'toggleActivation']);
+    Route::get('/admin/users/{id}/todos', [AdminController::class, 'viewUserTodos']);
+});
