@@ -109,32 +109,37 @@ Schema::create('user_roles', function (Blueprint $table) {
 
 #### 2) `create_role_permissions_table.php` - store CRUD permissions for each role
 Defines the `role_permissions` table:
+```php
 Schema::create('role_permissions', function (Blueprint $table) {
     $table->id();
     $table->unsignedBigInteger('role_id');
     $table->string('description'); // 'create', 'read', 'update', 'delete'
     $table->timestamps();
 });
-
+```
 ### 4. Models
 #### 1) UserRole.php - define a relationship with the users table
+```php
 class UserRole extends Model {
     protected $fillable = ['user_id', 'role_name', 'description'];
     public function user() {
         return $this->belongsTo(User::class);
     }
 }
-
+```
 #### 2) RolePermission.php - links each permission to a specific role
+```php
 class RolePermission extends Model {
     protected $fillable = ['role_id', 'description'];
     public function role() {
         return $this->belongsTo(UserRole::class, 'role_id');
     }
 }
+```
 
 ### 5. Middleware
 #### RoleMiddleware.php - protects routes so only users with the correct role can access them. 
+```php
 public function handle($request, Closure $next, $role){
     $userRole = UserRole::where('user_id', auth()->id())->value('role_name');
     if ($userRole !== $role) {
@@ -142,9 +147,10 @@ public function handle($request, Closure $next, $role){
     }
     return $next($request);
 }
-
+```
 ### 6. Routes
 #### web.php - use middleware to redirect users and admins to their appropriate sections
+```php
 // Routes for Regular Users
 Route::middleware(['auth', 'role:user'])->group(function () {
     Route::resource('/todo', TodoController::class);
@@ -157,3 +163,4 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/users/{id}/toggle', [AdminController::class, 'toggleActivation']);
     Route::get('/admin/users/{id}/todos', [AdminController::class, 'viewUserTodos']);
 });
+```
