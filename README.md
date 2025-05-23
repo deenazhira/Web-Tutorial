@@ -38,13 +38,44 @@ Include functions for profile update :
 
 # Class Assignment - Aunthentication
 
+## 1. Multi-Factor Authentication (MFA) via Email (Laravel Fortify)
+### Steps : 
+1. Laravel Fortify is installed using composer require laravel/fortify.
+2. The FortifyServiceProvider is registered in config/app.php.
+3. Fortify features are enabled via config/fortify.php.
+    - Enable email verification and two-factor authentication in config/fortify.php:
+    'features' => [
+    Features::twoFactorAuthentication([
+        'confirmPassword' => true,])
+5. When the new user register, user is redirected to /mfa(mfa.blade.php). Then,a 6-digit code is sent to their email.
+7. The user must enter the code to complete authentication.
+
 -Verify Page
 ![image](https://github.com/user-attachments/assets/afd4f0be-d074-4202-a2c7-81ea8449a9bd)
 
 -After submit code
 ![image](https://github.com/user-attachments/assets/29ce65bd-24c6-43e4-8ea2-9d9bb584bd63)
-
+## 2. Password hashed using Bcrypt or Argon2
+1. In env. file, include # HASH_DRIVER=bcyrpt
+2. Update `config/hashing.php`
+   'bcrypt' => [
+ 'rounds' => 10, 
+ 'verify' => true, // Determines if password entered is being verified on entry
+],
+   
 -Bcrypt password
 ![image](https://github.com/user-attachments/assets/6e148994-756b-4458-a74f-631d802e0806)
 
+## 3. Implement RateLimit only 3 failed attempts
+1. Add rate limit features in login.blade
+   use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+
+RateLimiter::for('login', function (Request $request) {
+    return Limit::perMinute(3)->by($request->ip()); //3 implement in 4 login attempts, user get error “429 — Too Many Requests”
+});
+
+## 4. Add salt
+- Add salt to register
+![image](https://github.com/user-attachments/assets/c7338384-d39a-41b9-b94c-2af6a87e49c6)
 
