@@ -88,8 +88,8 @@ This project enhances the Laravel To-Do application by adding a secure **authent
 ### 1. Authentication Layer
 - Users must log in before accessing the server
 - After successful login:
-  - Regular users are redirected to `/todo`.
-  - Admins are redirected to `/admin`.
+- Regular users are redirected to `/todo`.
+- Admins are redirected to `/admin`.
 
 ### 2. Role-Based Access Control (RBAC)
 RBAC is implemented using:
@@ -99,6 +99,7 @@ RBAC is implemented using:
 ### 3. Database Migrations
 #### 1) `create_user_roles_table.php` - This table links each user_id to a role_name to ensure each user has one specific role
 Defines the `user_roles` table:
+
 Schema::create('user_roles', function (Blueprint $table) {
     $table->id();
     $table->unsignedBigInteger('user_id')->unique();
