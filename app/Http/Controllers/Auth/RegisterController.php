@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserRole;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -11,17 +12,6 @@ use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new users as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
-
     use RegistersUsers;
 
     /**
@@ -66,11 +56,20 @@ class RegisterController extends Controller
     {
         $salt = Str::random(16); // Generate a 16-character salt
 
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'salt' => $salt, // Store salt in database
-            'password' => Hash::make($data['password'] . $salt), // Hash with salt
+            'salt' => $salt,
+            'password' => Hash::make($data['password'] . $salt),
         ]);
+
+        // Assign default 'user' role automatically
+        UserRole::create([
+            'user_id' => $user->id,
+            'role_name' => 'user',
+            'description' => 'Standard user',
+        ]);
+
+        return $user;
     }
 }

@@ -55,5 +55,8 @@ class Kernel extends HttpKernel
 
         // ✅ Add your MFA middleware here
         'mfa' => \App\Http\Middleware\EnsureMfaVerified::class,
+
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
+
     ];
 }

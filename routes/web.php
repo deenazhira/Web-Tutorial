@@ -4,53 +4,56 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Enable email verification
-Auth::routes(['verify' => true]); // This enables email verification routes
+// Authentication with email verification
+Auth::routes(['verify' => true]);
 
+// Grouped Auth Routes
 Route::middleware(['auth'])->group(function () {
-    Route::resource('/todo', TodoController::class);
-
+    // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Two-Factor Authentication (MFA) routes
     Route::get('/two-factor', [TwoFactorController::class, 'showTwoFactorForm'])->name('two-factor.index');
     Route::post('/two-factor/send', [TwoFactorController::class, 'sendTwoFactorCode'])->name('two-factor.send');
     Route::post('/two-factor/verify', [TwoFactorController::class, 'verifyTwoFactorCode'])->name('two-factor.verify');
-});
 
-// MFA - simulate MFA by displaying code directly on the screen (for testing)
-Route::middleware(['auth'])->get('/mfa', function () {
-    $code = 123456; // Hardcoded code for testing, replace with dynamic code generation for production
-    session(['mfa_code' => $code]); // Store the code in session
-    return view('auth.mfa', ['code' => $code]); // Pass code to view (for testing)
-});
+    // MFA Simulation (testing only)
+    Route::get('/mfa', function () {
+        $code = 123456;
+        session(['mfa_code' => $code]);
+        return view('auth.mfa', ['code' => $code]);
+    });
 
-// MFA POST route - Check the entered code
-Route::middleware(['auth'])->post('/mfa', function (Request $request) {
-    $request->validate([
-        'code' => 'required', // Ensure a code is provided
-    ]);
+    Route::post('/mfa', function (Request $request) {
+        $request->validate(['code' => 'required']);
+        if ($request->code == session('mfa_code')) {
+            session(['mfa_verified' => true]);
+            return redirect('/home');
+        }
+        return back()->withErrors(['code' => 'Invalid code.']);
+    });
 
-    // Check if the entered code matches the one stored in session
-    if ($request->code == session('mfa_code')) {
-        session(['mfa_verified' => true]); // Set the MFA verified flag
-        return redirect('/home'); // Redirect to a protected page (like home/dashboard)
-    }
+    // Dashboard or home
+    Route::get('/home', function () {
+        return view('home');
+    });
 
-    // If the code is incorrect, reload the MFA page with an error
-    return back()->withErrors(['code' => 'Invalid code.']);
-});
+    // Todo routes for users only
+    Route::middleware(['auth', 'role:user'])->group(function () {
+        Route::resource('/todo', TodoController::class);
+    });
 
-// Protect the /home route with both auth and mfa verification
-Route::middleware(['auth'])->get('/home', function () {
-    return view('home'); // Redirect to home if authenticated and MFA is verified
+    // Admin dashboard
+    Route::middleware(['role:admin'])->get('/admin', function () {
+        return view('admin.index');
+    });
 });

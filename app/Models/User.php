@@ -2,40 +2,32 @@
 
 namespace App\Models;
 
-//use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable //implements MustVerifyEmail
+class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name', 'email', 'password', 'nickname', 'avatar', 'phone', 'city', 'two_factor_code', 'two_factor_expires_at','salt',
+        'name',
+        'email',
+        'password',
+        'nickname',
+        'avatar',
+        'phone',
+        'city',
+        'two_factor_code',
+        'two_factor_expires_at',
+        'salt',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -43,5 +35,28 @@ class User extends Authenticatable //implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
-}
 
+    /**
+     * One-to-one: A user has one role
+     */
+    public function role()
+    {
+        return $this->hasOne(UserRole::class, 'user_id', 'id');
+    }
+
+    /**
+     * Check if the user has a given role
+     */
+    public function hasRole($roleName)
+    {
+        return $this->role && $this->role->role_name === $roleName;
+    }
+
+    /**
+     * Optional: Check if user has a permission
+     */
+    public function hasPermission($permission)
+    {
+        return $this->role && $this->role->permissions->contains('description', $permission);
+    }
+}
