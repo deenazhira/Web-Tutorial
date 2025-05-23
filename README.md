@@ -99,7 +99,6 @@ RBAC is implemented using:
 ### 3. Database Migrations
 #### 1) `create_user_roles_table.php` - This table links each user_id to a role_name to ensure each user has one specific role
 Defines the `user_roles` table:
-
 Schema::create('user_roles', function (Blueprint $table) {
     $table->id();
     $table->unsignedBigInteger('user_id')->unique();
