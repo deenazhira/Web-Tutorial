@@ -58,23 +58,25 @@ Include functions for profile update :
 ## 2. Password hashed using Bcrypt or Argon2
 1. In env. file, include # HASH_DRIVER=bcyrpt
 2. Update `config/hashing.php`
-   'bcrypt' => [
+ ```php
+'bcrypt' => [
  'rounds' => 10, 
  'verify' => true, // Determines if password entered is being verified on entry
 ],
-   
+ ``` 
 -Bcrypt password
 ![image](https://github.com/user-attachments/assets/6e148994-756b-4458-a74f-631d802e0806)
 
 ## 3. Implement RateLimit only 3 failed attempts
 1. Add rate limit features in login.blade
-   use Illuminate\Cache\RateLimiting\Limit;
+```php
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 
 RateLimiter::for('login', function (Request $request) {
     return Limit::perMinute(3)->by($request->ip()); //3 implement in 4 login attempts, user get error “429 — Too Many Requests”
 });
-
+```
 ## 4. Add salt
 - Add salt to register
 ![image](https://github.com/user-attachments/assets/c7338384-d39a-41b9-b94c-2af6a87e49c6)
@@ -164,3 +166,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users/{id}/todos', [AdminController::class, 'viewUserTodos']);
 });
 ```
+### 6. Controllers
+#### AdminController.php - Admin can view all users, toggle activation, and see users’ To-Do tasks.
+
+### 7. Create admin view
+#### dashboard.blade.php
+
+### 8. RBAC
+|User Page     | Admin Page           |
+|------------|------------------------|
+| Sees their own tasks         | Sees all users and tasks        |
+| Restricted based on role/permission    | Has full control over user roles and permissions  |
+| Can see/hide "New Task" based on permission  | Can assign who gets to see that button     |
+
+
