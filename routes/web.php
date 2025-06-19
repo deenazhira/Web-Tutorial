@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TwoFactorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -56,4 +57,10 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->get('/admin', function () {
         return view('admin.index');
     });
+
+    Route::middleware(['auth', 'isAdmin'])->group(function () {
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::post('/admin/assign-role', [AdminController::class, 'assignRole'])->name('admin.assignRole');
+    Route::post('/admin/toggle-status/{id}', [AdminController::class, 'toggleStatus'])->name('admin.toggleStatus');
+});
 });
