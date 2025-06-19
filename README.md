@@ -58,24 +58,125 @@ Include functions for profile update :
 ## 2. Password hashed using Bcrypt or Argon2
 1. In env. file, include # HASH_DRIVER=bcyrpt
 2. Update `config/hashing.php`
-   'bcrypt' => [
+ ```php
+'bcrypt' => [
  'rounds' => 10, 
  'verify' => true, // Determines if password entered is being verified on entry
 ],
-   
+ ``` 
 -Bcrypt password
 ![image](https://github.com/user-attachments/assets/6e148994-756b-4458-a74f-631d802e0806)
 
 ## 3. Implement RateLimit only 3 failed attempts
 1. Add rate limit features in login.blade
-   use Illuminate\Cache\RateLimiting\Limit;
+```php
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 
 RateLimiter::for('login', function (Request $request) {
     return Limit::perMinute(3)->by($request->ip()); //3 implement in 4 login attempts, user get error “429 — Too Many Requests”
 });
-
+```
 ## 4. Add salt
 - Add salt to register
 ![image](https://github.com/user-attachments/assets/c7338384-d39a-41b9-b94c-2af6a87e49c6)
+
+# Class Assignment - Laravel To-Do App with Authentication & Role-Based Access Control (RBAC)
+
+This project enhances the Laravel To-Do application by adding a secure **authentication system** and a **Role-Based Access Control (RBAC)** mechanism to differentiate between user and administrator privileges.
+
+## ✅ Features Implemented
+
+### 1. Authentication Layer
+- Users must log in before accessing the server
+- After successful login:
+- Regular users are redirected to `/todo`.
+- Admins are redirected to `/admin`.
+
+### 2. Role-Based Access Control (RBAC)
+RBAC is implemented using:
+- `user_roles` table – assigns roles to users.
+- `role_permissions` table – defines what each role can do (CRUD).
+
+### 3. Database Migrations
+#### 1) `create_user_roles_table.php` - This table links each user_id to a role_name to ensure each user has one specific role
+Defines the `user_roles` table:
+Schema::create('user_roles', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('user_id')->unique();
+    $table->string('role_name'); // 'admin' or 'user'
+    $table->string('description')->nullable();
+    $table->timestamps();
+});
+
+#### 2) `create_role_permissions_table.php` - store CRUD permissions for each role
+Defines the `role_permissions` table:
+```php
+Schema::create('role_permissions', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('role_id');
+    $table->string('description'); // 'create', 'read', 'update', 'delete'
+    $table->timestamps();
+});
+```
+### 4. Models
+#### 1) UserRole.php - define a relationship with the users table
+```php
+class UserRole extends Model {
+    protected $fillable = ['user_id', 'role_name', 'description'];
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
+}
+```
+#### 2) RolePermission.php - links each permission to a specific role
+```php
+class RolePermission extends Model {
+    protected $fillable = ['role_id', 'description'];
+    public function role() {
+        return $this->belongsTo(UserRole::class, 'role_id');
+    }
+}
+```
+
+### 5. Middleware
+#### RoleMiddleware.php - protects routes so only users with the correct role can access them. 
+```php
+public function handle($request, Closure $next, $role){
+    $userRole = UserRole::where('user_id', auth()->id())->value('role_name');
+    if ($userRole !== $role) {
+        abort(403, 'Unauthorized');
+    }
+    return $next($request);
+}
+```
+### 6. Routes
+#### web.php - use middleware to redirect users and admins to their appropriate sections
+```php
+// Routes for Regular Users
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::resource('/todo', TodoController::class);
+});
+
+// Routes for Admins
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin', [AdminController::class, 'dashboard']);
+    Route::get('/admin/users', [AdminController::class, 'userList']);
+    Route::post('/admin/users/{id}/toggle', [AdminController::class, 'toggleActivation']);
+    Route::get('/admin/users/{id}/todos', [AdminController::class, 'viewUserTodos']);
+});
+```
+### 6. Controllers
+#### AdminController.php - Admin can view all users, toggle activation, and see users’ To-Do tasks.
+
+### 7. Create admin view
+#### dashboard.blade.php
+
+### 8. RBAC
+|User Page     | Admin Page           |
+|------------|------------------------|
+| Sees their own tasks         | Sees all users and tasks        |
+| Restricted based on role/permission    | Has full control over user roles and permissions  |
+| Can see/hide "New Task" based on permission  | Can assign who gets to see that button     |
+
 
