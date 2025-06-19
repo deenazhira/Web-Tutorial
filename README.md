@@ -1,4 +1,4 @@
-# Class Assignment - Input Validation and Profile Page
+# Class Assignment 1 - Input Validation and Profile Page
 
 ## ✅ Enhanced Files
 
@@ -36,7 +36,7 @@ Include functions for profile update :
 - My Profile 
 ![image](https://github.com/user-attachments/assets/39cdb8d1-d851-41f6-804a-102472ba0559)
 
-# Class Assignment - Aunthentication
+# Class Assignment 2 - Aunthentication
 
 ## 1. Multi-Factor Authentication (MFA) via Email (Laravel Fortify)
 ### Steps : 
@@ -81,7 +81,7 @@ RateLimiter::for('login', function (Request $request) {
 - Add salt to register
 ![image](https://github.com/user-attachments/assets/c7338384-d39a-41b9-b94c-2af6a87e49c6)
 
-# Class Assignment - Laravel To-Do App with Authentication & Role-Based Access Control (RBAC)
+# Class Assignment 3 - Laravel To-Do App with Authentication & Role-Based Access Control (RBAC)
 
 This project enhances the Laravel To-Do application by adding a secure **authentication system** and a **Role-Based Access Control (RBAC)** mechanism to differentiate between user and administrator privileges.
 
@@ -180,3 +180,89 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 | Can see/hide "New Task" based on permission  | Can assign who gets to see that button     |
 
 
+# Class Assignment 4 - XSS and CSRF
+
+## 1. Content Security Policy (CSP)
+A security header that tells browsers to only load content (scripts, styles, images) from your own site.
+### 1.1 Create CSP middleware 
+```php
+php artisan make:middleware ContentSecurityPolicy
+```
+### 1.2 Update **`app/Http/Middleware/ContentSecurityPolicy.php`**
+```php
+class ContentSecurityPolicy {
+    public function handle(Request $request, Closure $next): Response {
+        $response = $next($request);
+
+        // set scripts rules which only allow scripts/styles/images from same origin
+        $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self';");
+
+        return $response;
+``` 
+### 1.3 Add middleware **`app/Http/Kernel.php`** inside web group
+This middleware injects CSP header in every response. So, any any external scripting will be prevented from execute. 
+```php
+protected $middlewareGroups = [
+    'web' => [
+         //Other middleware
+        \App\Http\Middleware\ContentSecurityPolicy::class,
+    ],
+```
+## 2. Cross-Site Scripting (XSS)
+XSS is a type of attack where attacker inject malicious JavaScript into webpages.
+### 2.1 XSS Protection
+- Laravel escapes all output using `{{ $variable }}` by default
+- Remove the usage of `{{!! $variable !!}}` which renders unescaped HTML
+- Use safe output in all blades. This will ensure only white validations are allowed.
+For examples **`resources/views/todo/view.blade.php`**
+```php
+ <div class="todo-title">
+    <strong>Title: </strong> {{ $todo->title }}
+ </div>
+    <br>
+ <div class="todo-description">
+    <strong>Description: </strong> {{ $todo->description }}
+ </div>
+    <br>
+ <div class="todo-description">
+    <strong>Status: </strong> {{ $todo->status }}
+ </div>
+```
+## 3. Cross-Site Request Forgery (CSRF)
+CSRF attacks tricks users into making unwanted requests during active sessions 
+### 3.1 CSRF Protection
+- Includes `@csrf` tokens in Blade form views
+- This token is checked against the session and request to prevent CSRF attacks.
+For examples **`resources/views/todo/add.blade.php`**
+```php
+<form action="{{ route('todo.store') }}" method="POST">
+@csrf
+ <div class="form-group">
+    <label for="title">Title:</label>
+    <input type="text" class="form-control" id="title" name="title">
+ </div>
+    <div class="form-group">
+    <label for="description">Description:</label>
+    <textarea name="description" class="form-control" id="description" rows="5"></textarea>
+</div>
+```
+**`resources/views/auth/login.blade.php`**
+```php
+<form method="POST" action="{{ route('login') }}">
+@csrf
+ <div class="row mb-3">
+         <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
+     <div class="col-md-6">
+         <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+         @error('email')
+        <span class="invalid-feedback" role="alert">
+    <strong>{{ $message }}</strong>
+</span>
+@enderror
+     </div>
+ </div>
+```
+### 3.2 Enable `VerifyCsrfToken` middleware in `Kernel.php`
+```php
+\App\Http\Middleware\VerifyCsrfToken::class,
+```
