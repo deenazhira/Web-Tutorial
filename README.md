@@ -78,7 +78,31 @@ RateLimiter::for('login', function (Request $request) {
 });
 ```
 ## 4. Add salt
-- Add salt to register
+- create migration file
+```php
+php artisan make:migration add_salt_to_users_table
+```
+- Update `database/migration/add_salt_to_users_table`
+```php
+public function up(){
+    Schema::table('users', function (Blueprint $table) {
+        $table->string('salt', 32)->nullable();
+    });}
+public function down(){
+    Schema::table('users', function (Blueprint $table) {
+        $table->dropColumn('salt');
+    });}
+```
+- Insert salt in `app/Models/User.php`
+```php
+protected $fillable = [
+    'name',
+    'email',
+    'password',
+    'salt',
+];
+```
+- Add salt to register. With this, new users will have a random salt stored in database
 ![image](https://github.com/user-attachments/assets/c7338384-d39a-41b9-b94c-2af6a87e49c6)
 
 # Class Assignment 3 - Laravel To-Do App with Authentication & Role-Based Access Control (RBAC)
